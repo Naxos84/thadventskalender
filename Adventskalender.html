@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T+H Adventskalender</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/JQuery-Snowfall/1.7.4/snowfall.jquery.min.js"></script>
+  <link rel="icon" type="image/x-icon" href="https://www.t-h.de/fileadmin/template/main/img/favicon.ico">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      font-family: helvetica neue, helvetica, arial, sans-serif;
+      font-weight: 200;
+      height: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      background-color: white;
+    }
+
+    h1 {
+      font-size: 35px;
+      margin: 0;
+      padding: 50px 0;
+      text-align: center;
+      color: rgb(217, 80, 23);
+      text-shadow: 2px 2px 0px rgba(233, 233, 233, 0.3);
+    }
+
+    h1 em {
+      font-weight: 500;
+    }
+
+    #modal {
+      position: fixed;
+      z-index: 1;
+      top: -100%;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(217, 80, 23, 0.9);
+    }
+
+    #modal .wrapper {
+      height: 100%;
+      width: 100%;
+      display: table;
+    }
+
+    #modal .wrapper .content {
+      display: table-cell;
+      vertical-align: middle;
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+
+    #modal .wrapper .content .close {
+      position: absolute;
+      height: 50px;
+      width: 50px;
+      top: 15px;
+      right: 15px;
+      transform: rotate(45deg);
+    }
+
+    #modal .wrapper .content .close:before {
+      content: "";
+      display: block;
+      position: absolute;
+      left: 50%;
+      margin-left: -1px;
+      height: 0%;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    #modal .wrapper .content .close:after {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 50%;
+      margin-top: -1px;
+      width: 0%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    #modal .wrapper .content .box {
+      padding: 50px;
+      width: 500px;
+      max-width: 100%;
+      background: white;
+      border-radius: 5px;
+      margin: 0 auto;
+      transform: scale(0);
+    }
+
+    #modal .wrapper .content .box h2 {
+      font-size: 25px;
+      line-height: 35px;
+      font-weight: 300;
+      margin-bottom: 25px;
+    }
+
+    #modal .wrapper .content .box p {
+      font-size: 16px;
+      line-height: 22px;
+      margin-bottom: 25px;
+    }
+
+    #modal .wrapper .content .box p:last-of-type {
+      margin-bottom: 0;
+    }
+
+    #modal .wrapper .content .box a.button {
+      display: inline-block;
+      padding: 15px;
+      color: white;
+      text-decoration: none;
+      background-color: #87888A;
+      border-radius: 5px;
+      margin-top: 25px;
+      box-shadow: inset 0 0 0 #87888A;
+      transition: 0.25s ease-in-out;
+    }
+
+    #modal .wrapper .content .box a.button:hover {
+      box-shadow: inset 500px 0 0 #d95017;
+    }
+
+    #modal.active {
+      top: 0%;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    #modal.active.moveOut {
+      animation: fadeOut 0.25s ease-in-out;
+    }
+
+    #modal.active .wrapper .content .box {
+      -webkit-animation: scaleUp 750ms 0.25s linear both;
+      animation: scaleUp 750ms 0.25s linear both;
+    }
+
+    #modal.active .wrapper .content .close:before {
+      height: 100%;
+      transition: 0.25s 0.5s ease-in-out;
+    }
+
+    #modal.active .wrapper .content .close:after {
+      width: 100%;
+      transition: 0.25s 0.25s ease-in-out;
+    }
+
+    #modal.active .wrapper .content .close:hover {
+      cursor: pointer;
+    }
+
+    #modal.active .wrapper .content .close:hover:before,
+    #modal.active .wrapper .content .close:hover:after {
+      transition: 0.25s 0s ease-in-out;
+      background: white;
+    }
+
+    #calendar {
+      width: 800px;
+      max-width: 100%;
+      margin: 0 auto;
+      border-top: 1px solid #e9e9e9;
+      border-left: 1px solid #e9e9e9;
+      position: relative;
+      z-index: 0;
+    }
+
+    #calendar #day-labels {
+      width: 100%;
+      border-bottom: 1px solid #e9e9e9;
+      border-right: 1px solid #e9e9e9;
+      overflow: auto;
+    }
+
+    #calendar #day-labels .label {
+      width: 14.285714286%;
+      float: left;
+      text-align: right;
+      padding: 10px;
+      font-size: 18px;
+      letter-spacing: 1px;
+      color: #7a7a7a;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    #calendar .week {
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #calendar .week .day {
+      width: 14.285714286%;
+      padding-bottom: 14.285714286%;
+      border-right: 1px solid #e9e9e9;
+      border-bottom: 1px solid #e9e9e9;
+      height: 0px;
+      float: left;
+      position: relative;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    #calendar .week .day .date {
+      display: block;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      border-radius: 100%;
+      height: 25px;
+      width: 25px;
+      text-align: center;
+      line-height: 25px;
+      font-size: 14px;
+      color: #87888A;
+    }
+
+    #calendar .week .day .date.today {
+      color: white;
+      background: #d95017;
+    }
+
+    #calendar .week .day .surprise {
+      display: none;
+    }
+
+    #calendar .week .day#christmas-day {
+      text-align: center;
+    }
+
+    #calendar .week .day#christmas-day svg {
+      height: 100%;
+      fill: #348834;
+    }
+
+    #calendar .week .day#christmas-day:hover svg {
+      fill: #e9e9e9;
+    }
+
+    #calendar .week .day.past {
+      background-image: url(https://www.svgrepo.com/show/118622/christmas-present.svg);
+      background-size: 30%;
+      background-repeat: no-repeat;
+      background-position: center center;
+    }
+
+    #calendar .week .day.past#christmas-day {
+      background-image: none;
+    }
+
+    #calendar .week .day:nth-last-of-type(2),
+    #calendar .week .day:last-of-type {
+      background-color: rgba(233, 233, 233, 0.95);
+    }
+
+    #calendar .week .day:nth-last-of-type(2).noDate:hover,
+    #calendar .week .day:last-of-type.noDate:hover {
+      background-color: rgba(233, 233, 233, 0.95);
+      cursor: default;
+    }
+
+    #calendar .week .day:hover {
+      background-color: #d95017;
+      cursor: pointer;
+    }
+
+    #calendar .week .day:hover.noDate {
+      background: rgba(255, 255, 255, 0.95);
+      cursor: default;
+    }
+
+    #calendar .week .day:hover .date {
+      color: #e9e9e9;
+    }
+
+    #calendar .week .day:hover .date.today {
+      background: #e9e9e9;
+      color: #d95017;
+    }
+
+    #bottom {
+      position: fixed !important;
+      height: 0;
+      width: 100%;
+      bottom: 0;
+      left: 0;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        top: 0%;
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      0% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    @-webkit-keyframes scaleUp {
+      0% {
+        -webkit-transform: matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      3.2% {
+        -webkit-transform: matrix3d(0.345, 0.098, 0, 0, 0.065, 0.345, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.345, 0.098, 0, 0, 0.065, 0.345, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      4.5% {
+        -webkit-transform: matrix3d(0.485, 0.163, 0, 0, 0.107, 0.485, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.485, 0.163, 0, 0, 0.107, 0.485, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      6.41% {
+        -webkit-transform: matrix3d(0.673, 0.242, 0, 0, 0.158, 0.673, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.673, 0.242, 0, 0, 0.158, 0.673, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      9.01% {
+        -webkit-transform: matrix3d(0.88, 0.288, 0, 0, 0.188, 0.88, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.88, 0.288, 0, 0, 0.188, 0.88, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      12.71% {
+        -webkit-transform: matrix3d(1.064, 0.241, 0, 0, 0.159, 1.064, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.064, 0.241, 0, 0, 0.159, 1.064, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      13.51% {
+        -webkit-transform: matrix3d(1.087, 0.221, 0, 0, 0.146, 1.087, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.087, 0.221, 0, 0, 0.146, 1.087, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      17.92% {
+        -webkit-transform: matrix3d(1.139, 0.105, 0, 0, 0.07, 1.139, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.139, 0.105, 0, 0, 0.07, 1.139, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      18.92% {
+        -webkit-transform: matrix3d(1.137, 0.082, 0, 0, 0.055, 1.137, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.137, 0.082, 0, 0, 0.055, 1.137, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      25.23% {
+        -webkit-transform: matrix3d(1.075, -0.001, 0, 0, -0.001, 1.075, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.075, -0.001, 0, 0, -0.001, 1.075, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      29.03% {
+        -webkit-transform: matrix3d(1.032, -0.015, 0, 0, -0.01, 1.032, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.032, -0.015, 0, 0, -0.01, 1.032, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      31.43% {
+        -webkit-transform: matrix3d(1.012, -0.017, 0, 0, -0.011, 1.012, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.012, -0.017, 0, 0, -0.011, 1.012, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      34.63% {
+        -webkit-transform: matrix3d(0.994, -0.014, 0, 0, -0.01, 0.994, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.994, -0.014, 0, 0, -0.01, 0.994, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      40.14% {
+        -webkit-transform: matrix3d(0.985, -0.007, 0, 0, -0.005, 0.985, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.985, -0.007, 0, 0, -0.005, 0.985, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      56.46% {
+        -webkit-transform: matrix3d(1, 0.001, 0, 0, 0.001, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0.001, 0, 0, 0.001, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      62.36% {
+        -webkit-transform: matrix3d(1.002, 0.001, 0, 0, 0, 1.002, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.002, 0.001, 0, 0, 0, 1.002, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      81.48% {
+        -webkit-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      84.68% {
+        -webkit-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      100% {
+        -webkit-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+    }
+
+    @keyframes scaleUp {
+      0% {
+        -webkit-transform: matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      3.2% {
+        -webkit-transform: matrix3d(0.345, 0.098, 0, 0, 0.065, 0.345, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.345, 0.098, 0, 0, 0.065, 0.345, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      4.5% {
+        -webkit-transform: matrix3d(0.485, 0.163, 0, 0, 0.107, 0.485, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.485, 0.163, 0, 0, 0.107, 0.485, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      6.41% {
+        -webkit-transform: matrix3d(0.673, 0.242, 0, 0, 0.158, 0.673, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.673, 0.242, 0, 0, 0.158, 0.673, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      9.01% {
+        -webkit-transform: matrix3d(0.88, 0.288, 0, 0, 0.188, 0.88, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.88, 0.288, 0, 0, 0.188, 0.88, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      12.71% {
+        -webkit-transform: matrix3d(1.064, 0.241, 0, 0, 0.159, 1.064, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.064, 0.241, 0, 0, 0.159, 1.064, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      13.51% {
+        -webkit-transform: matrix3d(1.087, 0.221, 0, 0, 0.146, 1.087, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.087, 0.221, 0, 0, 0.146, 1.087, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      17.92% {
+        -webkit-transform: matrix3d(1.139, 0.105, 0, 0, 0.07, 1.139, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.139, 0.105, 0, 0, 0.07, 1.139, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      18.92% {
+        -webkit-transform: matrix3d(1.137, 0.082, 0, 0, 0.055, 1.137, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.137, 0.082, 0, 0, 0.055, 1.137, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      25.23% {
+        -webkit-transform: matrix3d(1.075, -0.001, 0, 0, -0.001, 1.075, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.075, -0.001, 0, 0, -0.001, 1.075, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      29.03% {
+        -webkit-transform: matrix3d(1.032, -0.015, 0, 0, -0.01, 1.032, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.032, -0.015, 0, 0, -0.01, 1.032, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      31.43% {
+        -webkit-transform: matrix3d(1.012, -0.017, 0, 0, -0.011, 1.012, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.012, -0.017, 0, 0, -0.011, 1.012, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      34.63% {
+        -webkit-transform: matrix3d(0.994, -0.014, 0, 0, -0.01, 0.994, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.994, -0.014, 0, 0, -0.01, 0.994, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      40.14% {
+        -webkit-transform: matrix3d(0.985, -0.007, 0, 0, -0.005, 0.985, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(0.985, -0.007, 0, 0, -0.005, 0.985, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      56.46% {
+        -webkit-transform: matrix3d(1, 0.001, 0, 0, 0.001, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0.001, 0, 0, 0.001, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      62.36% {
+        -webkit-transform: matrix3d(1.002, 0.001, 0, 0, 0, 1.002, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1.002, 0.001, 0, 0, 0, 1.002, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      81.48% {
+        -webkit-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      84.68% {
+        -webkit-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+
+      100% {
+        -webkit-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      }
+    }
+  </style>
+</head>
+
+<body
+  style="background-color: rgba(180,200,214,0.1); background-image: url('https://th1.sharepoint.com/sites/Vorlagen/Grafik/Desktop-Video-Hintergrund%20-%20xmas-2022.png') ">
+  <h1><img alt="T+H Bildmarke"
+      src="https://www.t-h.de/fileadmin/content/images/logos/th/Logo_Bildmarke_kupfer_voll_90x90.png" width="90"
+      height="90"> Adventskalender</h1>
+  <section id="modal">
+    <div class="wrapper">
+      <div class="content">
+        <div class="close"></div>
+        <div class="box"></div>
+      </div>
+    </div>
+  </section>
+  <section id="calendar" class="collectonme">
+    <div id="day-labels">
+      <div class="label">Mo</div>
+      <div class="label">Di</div>
+      <div class="label">Mi</div>
+      <div class="label">Do</div>
+      <div class="label">Fr</div>
+      <div class="label">Sa</div>
+      <div class="label">So</div>
+    </div>
+    <div id="one" class="week">
+      <div class="day noDate"></div>
+      <div class="day noDate"></div>
+      <div class="day noDate"></div>
+      <div class="day">
+        <span class="date">1</span>
+        <div class="surprise">
+          <h2>Windlicht basteln</h2>
+          <p>Wenn der graue Herbst sein trübes Licht verbreitet und die klirrende Kälte des Winters Eisblumen an die
+            Fensterscheiben zeichnet, muss man drinnen umso mehr für Gemütlichkeit und eine behagliche Atmosphäre
+            sorgen.</p>
+          <a class="button" href="https://www.deindiy.de/windlichter-basteln/" target="_blank">Zur Bastelanleitung</a>
+        </div>
+
+      </div>
+      <div class="day">
+        <span class="date">2</span>
+        <div class="surprise">
+          <h2>Rezept Glühwein</h2>
+          <p>Mit diesem Rezept kannst du Glühwein ganz einfach selber machen. Das leckere Glühweingewürz macht ihn zu
+            etwas ganz Besonderem. Perfekt für die kalten Tage.</p>
+          <a class="button" href="https://www.einfachbacken.de/rezepte/gluehwein-selber-machen-das-einfache-grundrezept"
+            target="_blank">Zur Bastelanleitung</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">3</span>
+        <div class="surprise">
+          <h2>Rezept Stollen</h2>
+          <p>Dieses Rezept für leckeren Christstollen kommt direkt aus Omas Rezeptebuch und ist mit seinen feinen
+            Gewürzen bei allen beliebt. Dank unserer einfachen Schritt-für-Schritt Anleitung kannst auch du den
+            perfekten Christstollen selber machen.</p>
+          <a href="https://www.einfachbacken.de/rezepte/christstollen-omas-bestes-rezept" target="_blank"
+            class="button">Zum Rezept</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">4</span>
+        <div class="surprise">
+          <h2>Do you like my decorations?</h2>
+          <p>Witziges Video auf Youtube. Lass dich überraschen!</p>
+          <a class="button" href="https://www.youtube.com/watch?v=-AUE4ZrMItI" target="_blank">Zum Video</a>
+        </div>
+      </div>
+    </div>
+    <div id="two" class="week">
+      <div class="day">
+        <span class="date">5</span>
+        <div class="surprise">
+          <h2>Nachhaltige Geschenkideen</h2>
+          <p>Du bist auf der Suche nach einem besonderen Geschenk? Der beschenkte hat aber einfach schon alles?</p>
+          <a class="button"
+            href="https://www.oekotest.de/freizeit-technik/Nachhaltige-Geschenke-23-Geschenk-Ideen-fuer-Weihnachten_11048_1.html"
+            target="_blank">23 nachhaltige Geschenkideen</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">6</span>
+        <div class="surprise">
+          <h2>Heute ist Nikolaus</h2>
+          <a href="https://www.animierte-gifs.net/cat-nikolaus-584.htm"><img
+              src="https://www.animierte-gifs.net/data/media/584/animiertes-nikolaus-bild-0029.gif" border="0"
+              alt="animiertes-nikolaus-bild-0029" /></a>
+          <!-- <p>If you're not familiar with Chris Coyier, shame on you. The dude is one of the founders of Codepen, for crying out loud. Anywho, he has a podcast called the Shoptalk Show that is audio gold.</p>
+        <a class="button" href="http://shoptalkshow.com" target="_blank">Listen Now</a> -->
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">7</span>
+        <div class="surprise">
+          <h2>Bastelanleitung Weihnachtsstern</h2>
+          <p>In der Vorweihnachtszeit darf das Weihnachtssterne basteln natürlich nicht fehlen! Diese Variante hier geht
+            relativ schnell und einfach!</p>
+          <a href="https://www.geo.de/geolino/basteln/20078-rtkl-advent-weihnachtssterne-basteln-so-leicht-gehts#:~:text=Bastelanleitung:%20So%20werden%20die%20Weihnachtssterne%20gebastelt&text=F%C3%BCr%20einen%20Stern%20brauchst%20du,St%C3%BCck%20Holz%20oder%20%C3%84hnliches%20kleben."
+            class="button" target="_blank">Zur Anleitung</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">8</span>
+        <div class="surprise">
+          <h2>Winterworkout</h2>
+          <p>Challenge 1/7 "Fit durch den Winter" von Gabi Fastner</p>
+          <a class="button" href="https://www.youtube.com/watch?v=WCOb-YkEfxQ&ab_channel=GabiFastner"
+            target="_blank">Zum Video</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">9</span>
+        <div class="surprise">
+          <h2>Schwelgen in Erinnerungen...</h2>
+          <p>Erinnerungen von vor ~ 3 Jahren. Lass dich überraschen.</p>
+          <a class="button"
+            href="https://th1.sharepoint.com/Fotos%20%20FirmenEvents/Forms/FotoKachelvorschau.aspx?ga=1&id=%2FFotos%20%20FirmenEvents%2F2019%5FWeihnachtsfeier%2BBV"
+            target="_blank">Zu
+            den Erinnerungen</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">10</span>
+        <div class="surprise">
+          <h2>Weihnachtsgedichte</h2>
+          <p>Schon wieder ein Jahr rum und schon wieder weißt du nicht, welches Gedicht du beim Weihnachtsmann aufsagen
+            sollst? Dann lass dich inspirieren :)</p>
+          <a href="https://weihnachtsgedichte.de/" class="button">Über 100 Weihnachtsgedichte</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">11</span>
+        <div class="surprise">
+          <h2>IT-Weihnachtsgedicht</h2>
+          <p>Du bist ganz anders als der Prototyp von Euch,<br />
+            trägst keine Brille, bist kein Nerd, machst stattdessen ganz normales Zeug. <br />
+            Denn Informatiker, so sagt man, lieben nur ihren PC,<br />
+            doch dies ist eine Lüge und die tut ja so weh.<br />
+            Weihnachtliche Grüße für Dich und alle Genies,<br />
+            denn Informatiker sind nichts anderes! Andere Meinungen sind mies.</p>
+        </div>
+      </div>
+    </div>
+    <div id="three" class="week">
+      <div class="day">
+        <span class="date">12</span>
+        <div class="surprise">
+          <h2>Weihnachtsradio</h2>
+          <p>Weihnachten kommt immer näher und es wird Zeit das du dich darauf einstimmst. Natürlich mit Weihnachtsmusik
+          </p>
+          <a class="button" href="https://webradio.ffh.de/weihnachtsradio" target="_blank">Zum Weihnachtsradio</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">13</span>
+        <div class="surprise">
+          <h2>Rezepte für das Weihnachtsessen</h2>
+          <!-- <p>Bald stehen Heilig Abend und die Weihnachtsfeiertage vor der Tür. Vielleicht kommen Verwandte, Bekannte oder Freunde vorbei.</p> -->
+          <a class="button" href="https://www.essen-und-trinken.de/weihnachten/" target="_blank">Zu den Rezepten</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">14</span>
+        <div class="surprise">
+          <h2>Origami Weihnachtsbaum basteln</h2>
+          <p>Noch nie davon gehört? Dann gleich weiter zur Bastelanleitung</p>
+          <a class="button" href="http://www.modx.com" target="_blank">Zur Anleitung</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">15</span>
+        <div class="surprise">
+          <h2>Weihnachtsyoga</h2>
+          <p>Ihr seid total gestresst und wollt eure Vorweihnachtszeit eigentlich viel mehr genießen? Dann könnte das
+            hier helfen.</p>
+          <a class="button" href="https://www.youtube.com/watch?v=nitGIUR6gwA&ab_channel=AmienaZylla"
+            target="_blank">Zum Video</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">16</span>
+        <div class="surprise">
+          <h2>Geschenkidee - Bruchschokolade</h2>
+          <p>Anleitung für Bruchschokolade aus dem Backofen mit vielen bunten Toppings als kleines Geschenk für liebe
+            Freunde</p>
+          <a class="button" href="https://www.familienkost.de/rezept_bruchschokolade-backofen.html" target="_blank">Zur
+            Anleitung</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">17</span>
+        <div class="surprise">
+          <h2>Die Weihnachtsgeschichte</h2>
+          <p>Die Weihnachtsgeschichte, auch für Kinder geeignet.</p>
+          <a class="button" href="https://www.youtube.com/watch?v=zvhPNsizb4c" target="_blank">Zum Video</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">18</span>
+        <div class="surprise">
+          <h2>Fröbelstern basteln</h2>
+          <p>Du brauchst noch Anregungen für eine tolle Weihnachtsdeko? Dann zeigt dir das Video, wie du einen
+            klassischen Fröbelstern für eine Girlande faltest.</p>
+          <a href="https://www.youtube.com/watch?v=TOEIEfZ29GQ&ab_channel=LECKER" target="_blank" class="button">Zum
+            Video</a>
+        </div>
+      </div>
+    </div>
+    <div id="four" class="week">
+      <div class="day">
+        <span class="date">19</span>
+        <div class="surprise">
+          <h2>Weihnachtsstollen backen</h2>
+          <p>Ja, das is schon das zweite Rezept. Für den Fall, dass du das erste verpasst hast.</p>
+          <a href="https://www.ploetzblog.de/stollen/" target="_blank" class="button">Zum Rezept</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">20</span>
+        <div class="surprise">
+          <h2>Weihnachtsgeschenke einpacken</h2>
+          <p>Geschenk mal anders einpacken, kreativ und mit Liebe. Es ist doch wie beim Essen, das Auge ißt mit !!!</p>
+          <a href="https://www.youtube.com/watch?v=-m_gPD2-SEE&ab_channel=Nele%CC%81sWelt-Kreatives%26schnackenmitNele"
+            target="_blank" class="button">Zur Anleitung</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">21</span>
+        <div class="surprise">
+          <h2>Die berühmteste Weihnachtsgeschichte der Neuzeit</h2>
+          <p>Gibt es das Christkind - Weihnachtsbrief an die New Yorker Tageszeitung "Sun"</p>
+          <a href="http://avmat.datenbank-bildungsmedien.net/vmat?nr=5559274&s=P&labinr=5559274&pid=jdpr6u4lfthjm5uf35uu9pd1l1"
+            target="_blank" class="button">Zum Text</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">22</span>
+        <div class="surprise">
+          <h2>Feuerzangenbowle nach Heinz Rühmann</h2>
+          <p>Mit diesem Rezept für Feuerzangenbowle holt ihr euch einen Klassiker ins heimische Wohnzimmer. Wie es Heinz
+            Rühmann schon sagte “ Eine Feuerzangenbowle hat es in sich! Sie ist ein Mittelding zwischen Gesöff und
+            Hexerei.“</p>
+          <a href="https://www.grillkameraden.de/feuerzangenbowle-rezept/" target="_blank" class="button">Zum Rezept</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">23</span>
+        <div class="surprise">
+          <h2>Brauch Raunächte</h2>
+          <p>Morgen Abend beginnen die Raunächte.</p>
+          <a href="https://findedeinyoga.org/blog/rauhnaechte_wuensche" target="_blank" class="button">13 Wünsche durch
+            die Raunächte</a>
+        </div>
+      </div>
+      <div class="day">
+        <span class="date">24</span>
+
+        <div class="surprise">
+          <h2>Anleitung Schrottwichteln</h2>
+          <p>Und was macht du nach Weihnachten mit all den Geschkenken?</p>
+          <a href="https://www.familie.de/feiern/weihnachten/schrottwichteln-ideen-und-regeln/" target="_blank"
+            class="button">Ideen & Regeln zum Schrottwichteln</a>
+        </div>
+        <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px" y="0px" width="48.905px" height="48.904px" viewBox="0 0 48.905 48.904"
+          style="enable-background:new 0 0 48.905 48.904;" xml:space="preserve">
+          <g>
+            <g>
+              <g>
+                <polygon points="22.092,7.262 24.452,6.022 26.811,7.262 26.362,4.635 28.268,2.775 25.633,2.39 24.452,0 23.272,2.39 
+				20.635,2.775 22.544,4.635 			" />
+              </g>
+              <g>
+                <g>
+                  <polygon points="34.237,18.481 35.088,18.481 24.452,7.846 17.67,14.627 				" />
+                </g>
+                <g>
+                  <path d="M33.958,26.638l-1.979,0.349c0.323,0.192,0.554,0.533,0.554,0.938c0,0.61-0.496,1.104-1.106,1.104
+					c-0.611,0-1.104-0.496-1.104-1.104c0-0.267,0.105-0.498,0.26-0.688l-3.443,0.611c0.85,0.074,1.523,0.762,1.523,1.631
+					c0,0.916-0.742,1.656-1.655,1.656c-0.919,0-1.658-0.74-1.658-1.656c0-0.654,0.388-1.209,0.938-1.479l-4.349,0.771
+					c0.299,0.151,0.51,0.457,0.51,0.813c0,0.51-0.411,0.922-0.921,0.922c-0.509,0-0.918-0.412-0.918-0.922
+					c0-0.242,0.096-0.456,0.248-0.62L10.849,30.74l-2.513,2.514l27.466,2.003l-1.468-1.468h6.777L33.958,26.638z" />
+                </g>
+                <g>
+                  <path d="M16.146,25.439l-3.181,3.182l24.242-4.304l-4.406-4.404l-6.46-1.504c0.37,0.354,0.604,0.853,0.604,1.407
+					c0,1.077-0.873,1.95-1.95,1.95c-1.076,0-1.946-0.873-1.946-1.95c0-0.877,0.58-1.607,1.375-1.852l-3.319-0.773
+					c0.12,0.203,0.205,0.426,0.205,0.676c0,0.756-0.614,1.37-1.37,1.37c-0.754,0-1.367-0.614-1.367-1.37
+					c0-0.476,0.258-0.876,0.628-1.121l-2.963-0.689l-2.425,2.425h3.715l-6.957,6.958H16.146L16.146,25.439z" />
+                </g>
+                <g>
+                  <path d="M42.468,41.925l-4.812-4.813l-4.768-0.347c0.258,0.265,0.42,0.623,0.42,1.019c0,0.81-0.654,1.465-1.462,1.465
+					s-1.46-0.655-1.46-1.465c0-0.481,0.251-0.889,0.613-1.153l-8.132-0.595c0.205,0.207,0.332,0.488,0.332,0.802
+					c0,0.634-0.512,1.147-1.146,1.147c-0.632,0-1.144-0.512-1.144-1.147c0-0.381,0.197-0.701,0.484-0.909l-3.998-0.294
+					c0.54,0.32,0.907,0.899,0.907,1.571c0,1.011-0.82,1.828-1.832,1.828c-1.008,0-1.827-0.817-1.827-1.828
+					c0-0.762,0.466-1.414,1.128-1.689l-2.73-0.199l-6.606,6.608h15.829l-1.257,6.979h6.889l-1.259-6.979L42.468,41.925
+					L42.468,41.925z" />
+                </g>
+              </g>
+            </g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+          <g>
+          </g>
+        </svg>
+      </div>
+      <div class="day">
+        <span class="date">25</span>
+        <div class="surprise">
+          <h2>Penntüte</h2>
+          <p>Heilig Abend war gestern! ;)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div id="bottom" class="collectonme"></div>
+  <script>
+    // target current day, disable future days and days without dates
+
+    var d = new Date();
+    var todaysDate = d.getDate();
+    var target = $('#calendar .week .day .date');
+
+    target.each(function () {
+      var day = $(this).html();
+      if (todaysDate == day) {
+        $(this).addClass('today');
+      }
+      if (todaysDate < day) {
+        $(this).parent().addClass('future');
+      }
+      if (todaysDate >= day) {
+        $(this).parent().addClass('past')
+      }
+    });
+
+    // handle clicks on days
+
+    $('.day').click(function () {
+      if ($(this).hasClass('future')) {
+        $('#modal').addClass('active');
+        $('#modal .wrapper .content .box').html("<h2>Na, na.</h2> <p>Du wirst doch wohl nicht schummeln wollen? Warte bis der Tag kommt und lass dich dann überraschen.</p>");
+      }
+      if ($(this).hasClass('past')) {
+        var content = $(this).children('.surprise').html();
+        $('#modal').addClass('active');
+        $('#modal .wrapper .content .box').html('');
+        $('#modal .wrapper .content .box').html(content);
+      }
+    })
+
+    // close modal
+
+    $('.close').click(function () {
+      var ultimateParent = $(this).parent().parent().parent();
+      ultimateParent.addClass('moveOut');
+      setTimeout(function () {
+        ultimateParent.removeClass('moveOut').removeClass('active');
+      }, 250);
+    })
+
+    // snow effect customizations
+
+    $(document).snowfall({ flakeCount: 150, collection: '.collectonme', maxSpeed: 8, maxSize: 5, flakeColor: "#e9e9e9", round: true });
+  </script>
+</body>
+
+</html>
